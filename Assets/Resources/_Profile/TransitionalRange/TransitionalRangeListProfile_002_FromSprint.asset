@@ -18,22 +18,22 @@ MonoBehaviour:
       enumValue: 0
     <destinationProgress>k__BackingField: 1
     isAlltimeTranditional: 1
-    <transitionalRatio>k__BackingField:
+    transitionalRatio:
       min: 0
-      max: 1
+      max: 0
   - <destinationState>k__BackingField:
       enumTypeName: PlayerMotion
       enumValue: 1
     <destinationProgress>k__BackingField: 1
     isAlltimeTranditional: 1
-    <transitionalRatio>k__BackingField:
+    transitionalRatio:
       min: 0
-      max: 1
+      max: 0
   - <destinationState>k__BackingField:
       enumTypeName: PlayerMotion
       enumValue: 3
     <destinationProgress>k__BackingField: 0
     isAlltimeTranditional: 1
-    <transitionalRatio>k__BackingField:
+    transitionalRatio:
       min: 0
-      max: 1
+      max: 0

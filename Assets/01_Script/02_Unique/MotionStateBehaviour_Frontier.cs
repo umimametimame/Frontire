@@ -7,17 +7,11 @@ using UnityEngine;
 public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMotion>
 {
     private PlayerOperator_Frontier player;
+
     private void Awake()
     {
-        Initialize();
+        AssignReference();
     }
-
-
-    private void Start()
-    {
-        chara.followLanding.AssignDisableGravityFunc(EnableGravityFunc);
-    }
-
     protected override void Update()
     {
         base.Update();
@@ -27,20 +21,24 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
         }
     }
 
-    [ContextMenu(nameof(Initialize))]
-    private void Initialize()
+    private void AssignReference()
     {
-        Initialize_Base();
-        AssignMotionStateProfile<MotionState_Player>();
+        AssignReference_Base();
+    }
+
+    public void Initialize()
+    {
         InitializeMotionState();
-        AssignTransitional();
+        chara.followLanding.AssignDisableGravityFunc(EnableGravityFunc);
+        AssignToFinishFunc();
+        AssignTransitionalRangeFunc();
     }
 
 
     public void Assign_Player(PlayerOperator_Frontier _player)
     {
         player = _player;
-        foreach (var _m in motionDic)
+        foreach (var _m in motionStateDic)
         {
             if (_m.Value is MotionState_Player)
             {
@@ -53,74 +51,50 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
 
     private void InitializeMotionState()
     {
-        foreach (var _d in motionDic)
+        ProfileMotionStateDic<MotionState_Player>();
+        foreach (var _motionStateIdx in motionStateDic)
         {
-            for (int i = 0; i < _d.Value.progressList.Count; ++i)
+            for (int i = 0; i < _motionStateIdx.Value.progressList.Count; ++i)
             {
-                AnimationProgress_Base _currentProgress = _d.Value.progressList[i];
-                List<TransitionalRange> _transitionalList = _currentProgress.transitionalRangeList;
+                AnimationProgress_Base _currentProgress = _motionStateIdx.Value.progressList[i];
+                List<TransitionalRange> _transitionalList = _currentProgress.transitionalList;
                 for (int j = 0; j < _transitionalList.Count; ++j)
                 {
                     _transitionalList[j].Initialize(this);
                 }
             }
         }
+        //Debug.Log($"{nameof(InitializeMotionState)} {motionStateDic.Count}");
     }
 
-    private void AssignTransitional()
+    private void AssignToFinishFunc()
     {
-        var _transitionnalDic = new List<List<TransitionalRange>>();
-        foreach (var _d in motionDic)
-        {
-            for (int i = 0; i < _d.Value.progressList.Count; ++i)
-            {
-                AnimationProgress_Base _currentProgress = _d.Value.progressList[i];
-                List<TransitionalRange> _transitionalList = _currentProgress.transitionalRangeList;
-                _transitionnalDic.Add(_transitionalList);
-            }
-        }
+        motionStateDic[PlayerMotion.Sprint].progressDic[AnimationProgress.Loop].toFinishFunc = Sprint_ToFinishFunc;
+        motionStateDic[PlayerMotion.Jump].progressDic[AnimationProgress.Loop].toFinishFunc = Jump_ToFinishFunc; ;
 
-        //motionDic[PlayerMotion.Sprint_Value].progressDic[AnimationProgress.In].toFinishFunc = Sprint_ToFinishFunc;
-        motionDic[PlayerMotion.Sprint_Value].progressDic[AnimationProgress.Loop].toFinishFunc = Sprint_ToFinishFunc;
-        motionDic[PlayerMotion.Jump_Value].progressDic[AnimationProgress.Loop].toFinishFunc = Jump_ToFinishFunc; ;
+    }
+    private void AssignTransitionalRangeFunc()
+    {
 
-        foreach (var _t in _transitionnalDic)
+        Dictionary<PlayerMotion, Func<bool>> _transitionalRangeFuncDic = new Dictionary<PlayerMotion, Func<bool>>();
+        _transitionalRangeFuncDic.Add(PlayerMotion.Idle, TransitionalFunc_ToIdle);
+        _transitionalRangeFuncDic.Add(PlayerMotion.Walk, TransitionalFunc_ToWalk);
+        _transitionalRangeFuncDic.Add(PlayerMotion.Sprint, TransitionalFunc_ToSprint);
+        _transitionalRangeFuncDic.Add(PlayerMotion.Jump, TransitionalFunc_ToJump);
+
+        foreach (var _transitionalRangeIdx in GetTransitionalRangeListList)
         {
             TransitionalRange _transisitionalRange = new TransitionalRange();
-            for (int i = 0; i < _t.Count; ++i)
+            for (int i = 0; i < _transitionalRangeIdx.Count; ++i)
             {
-                _transisitionalRange = _t[i];
-                PlayerMotion _convert = Converter.GetEnumFromInt<PlayerMotion>(_transisitionalRange.profile.destinationState.Value);
-                switch (_convert)
-                {
-                    case PlayerMotion.Idle_Stick:
-                    _transisitionalRange.transitionalInputFunc = TransitionalFunc_ToIdle;
-                    break;
-                    case PlayerMotion.Walk_Stick:
-                    _transisitionalRange.transitionalInputFunc = TransitionalFunc_ToWalk;
-                    break;
-                    case PlayerMotion.Sprint_Value:
-                    _transisitionalRange.transitionalInputFunc = TransitionalFunc_ToSprint;
-                    break;
-                    case PlayerMotion.Jump_Value:
-                    _transisitionalRange.transitionalInputFunc = TransitionalFunc_ToJump;
-                    break;
-                    case PlayerMotion.Guard:
-                    break;
-                    case PlayerMotion.Fall:
-                    break;
-                    case PlayerMotion.BackStub:
-                    break;
-                    case PlayerMotion.GuardKnockBack:
-                    break;
-                    case PlayerMotion.Down:
-                    break;
-                    case PlayerMotion.Think:
-                    break;
-                }
+                _transisitionalRange = _transitionalRangeIdx[i];
+                PlayerMotion _convertEnum = Converter.GetEnumFromInt<PlayerMotion>(_transisitionalRange.profile.destinationState.Value);
+                _transisitionalRange.transitionalInputFunc = _transitionalRangeFuncDic[_convertEnum];
+                
             }
         }
     }
+
 
     private bool TransitionalFunc_ToIdle()
     {
@@ -137,7 +111,7 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
         bool _ret = false;
         if (player.IsMoveInputtingInMovable == true)
         {
-            if (player.InputCommandDic[InputCommandState_F.Sprint_Value].Executable == false)
+            if (player.InputCommandDic[InputCommandState_F.Sprint].Executable == false)
             {
 
                 _ret = true;
@@ -153,7 +127,7 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
         bool _ret = false;
         if (player.IsMoveInputtingInMovable == true)
         {
-            if (player.InputCommandDic[InputCommandState_F.Sprint_Value].Executable == true)
+            if (player.InputCommandDic[InputCommandState_F.Sprint].Executable == true)
             {
                 _ret = true;
                 Debug.Log($"Sprint Input");
@@ -166,7 +140,7 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
     private bool TransitionalFunc_ToJump()
     {
         bool _ret = false;
-        if (player.InputCommandDic[InputCommandState_F.Jump_Button].Executable == true)
+        if (player.InputCommandDic[InputCommandState_F.Jump].Executable == true)
         {
             _ret = true;
             Debug.Log($"Jump Input");
@@ -181,7 +155,7 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
         // SprintモーションがOutでなければ
         if (CurrentMotionStateProgressEnum != AnimationProgress.Out)
         {
-            if (player.InputCommandDic[InputCommandState_F.Sprint_Value].Executable == false)
+            if (player.InputCommandDic[InputCommandState_F.Sprint].Executable == false)
             {
                 _ret = true;
             }
@@ -189,7 +163,6 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
             {
                 _ret = true;
             }
-            //Debug.LogWarning($"{nameof(Sprint_ToFinishFunc)} {currentMotionStateEnum} {currentMotionStateProgressEnum}");
         }
 
 
@@ -210,18 +183,18 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
 
     private void ThinkNextMotion()
     {
-        PlayerMotion _ret = PlayerMotion.Idle_Stick;
+        PlayerMotion _ret = PlayerMotion.Idle;
         if (TransitionalFunc_ToSprint() == true)
         {
-            _ret = PlayerMotion.Sprint_Value;
+            _ret = PlayerMotion.Sprint;
         }
         else if (TransitionalFunc_ToWalk() == true)
         {
-            _ret = PlayerMotion.Walk_Stick;
+            _ret = PlayerMotion.Walk;
         }
 
         //Debug.Log($"{nameof(ThinkNextMotion)} {_ret}");
-        AssignNextStateAndProgress(_ret, motionDic[_ret].FirstProgress);
+        AssignNextStateAndProgress(_ret, motionStateDic[_ret].FirstProgress);
     }
 
     private bool EnableGravityFunc()
@@ -247,25 +220,25 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
 
             switch (currentMotionStateEnum)
             {
-                case PlayerMotion.Idle_Stick:
+                case PlayerMotion.Idle:
                     {
                         _ret = true;
                     }
                 break;
 
-                case PlayerMotion.Walk_Stick:
+                case PlayerMotion.Walk:
                     {
                         _ret = true;
                     }
                 break;
 
-                case PlayerMotion.Sprint_Value:
+                case PlayerMotion.Sprint:
                     {
                         _ret = true;
                     }
                 break;
 
-                case PlayerMotion.Jump_Value:
+                case PlayerMotion.Jump:
                     {
                         _ret = true;
                     }
@@ -279,7 +252,7 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
         get
         {
             bool _ret = false;
-            if (currentMotionStateEnum == PlayerMotion.Jump_Value)
+            if (currentMotionStateEnum == PlayerMotion.Jump)
             {
                 if (CurrentMotionStateProgressEnum == AnimationProgress.In)
                 {
@@ -295,7 +268,7 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
         get
         {
             float _ret;
-            _ret = motionDic[PlayerMotion.Walk_Stick].progressDic[AnimationProgress.Loop].profile.speedProfile.MultiplyValue;
+            _ret = motionStateDic[PlayerMotion.Walk].progressDic[AnimationProgress.Loop].profile.speedProfile.MultiplyValue;
             return _ret;
         }
     }
@@ -304,10 +277,10 @@ public class MotionStateBehaviour_Frontier : MotionStateBehaviour_Base<PlayerMot
 
 public enum PlayerMotion
 {
-    Idle_Stick = 0,
-    Walk_Stick,
-    Sprint_Value,
-    Jump_Value,
+    Idle = 0,
+    Walk,
+    Sprint,
+    Jump,
     Guard,
     Fall,
     BackStub,

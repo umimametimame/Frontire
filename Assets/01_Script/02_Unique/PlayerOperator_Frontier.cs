@@ -4,12 +4,25 @@ using UnityEngine;
 public class PlayerOperator_Frontier : PlayerOperator_BaseTPS
 {
     [field: SerializeField, NonEditable] public MotionStateBehaviour_Frontier motionBehaviou { get; private set; }
-
-    protected override void Start()
+    public void Initialize()
     {
-        base.Start();
-        motionBehaviou = GetComponent<MotionStateBehaviour_Frontier>();
+        motionBehaviou.Initialize();
         motionBehaviou.Assign_Player(this);
+    }
+
+    public void AssignReference()
+    {
+        motionBehaviou = GetComponent<MotionStateBehaviour_Frontier>();
+    }
+
+    private void Awake()
+    {
+        AssignReference();
+    }
+
+    private void Start()
+    {
+        Initialize();
     }
 
     protected override void Update()
@@ -47,6 +60,4 @@ public class PlayerOperator_Frontier : PlayerOperator_BaseTPS
             return _ret;
         }
     }
-
-
 }

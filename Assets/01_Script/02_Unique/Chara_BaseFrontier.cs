@@ -3,9 +3,16 @@ using AddUnityClass;
 
 public class Chara_BaseFrontier : Chara_Base3D
 {
+    private void Awake()
+    {
+    }
     private void Start()
     {
-        Initialize_Base3D();
+    }
+
+    public override void AssignReference_Base3D()
+    {
+        base.AssignReference_Base3D();
     }
 
     private void Update()

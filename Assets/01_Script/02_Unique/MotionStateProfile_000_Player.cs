@@ -5,7 +5,7 @@ using AYellowpaper.SerializedCollections;
 
 public class MotionStateProfile_000_Player : MotionStateProfile_BaseFrontier<PlayerMotion>
 {
-    [EnableIf(nameof(state), PlayerMotion.Sprint_Value)]
+    [EnableIf(nameof(state), PlayerMotion.Sprint)]
     public float sprintSpeed;
 
 

@@ -42,5 +42,41 @@ MonoBehaviour:
       m_RotationOrder: 4
     multiplyValue: 10
     <profile>k__BackingField: {fileID: 0}
+  inertia:
+    <startImpulseVelocity>k__BackingField: {x: 0, y: 0, z: 0}
+    inertiaDurationType: 0
+    durationTime:
+      interval: 0
+      <time>k__BackingField:
+        <value>k__BackingField: 0
+        <increseType>k__BackingField: 0
+        reversalIncrese: 0
+    curve:
+      curve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 34
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      multiplyValue: 1
+      <profile>k__BackingField: {fileID: 0}
   transitionalProfiles:
-  - {fileID: 11400000, guid: 5876482654ad052468072f7926601043, type: 2}
+  - {fileID: 11400000, guid: 7de5dbc54ab50c8419e6766dba7f3e59, type: 2}

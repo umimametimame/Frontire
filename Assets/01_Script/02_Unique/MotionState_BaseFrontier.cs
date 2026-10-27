@@ -54,22 +54,22 @@ public class MotionState_Player : MotionState_BaseFrontier<PlayerMotion>
     {
         switch (state)
         {
-            case PlayerMotion.Idle_Stick:
+            case PlayerMotion.Idle:
                 {
                     UpdateIdle();
                 }
                 break;
-            case PlayerMotion.Walk_Stick:
+            case PlayerMotion.Walk:
                 {
                     UpdateWalk();
                 }
                 break;
-            case PlayerMotion.Sprint_Value:
+            case PlayerMotion.Sprint:
                 {
                     UpdateSprint();
                 }
                 break;
-            case PlayerMotion.Jump_Value:
+            case PlayerMotion.Jump:
                 {
                     UpdateJump();
                 }
@@ -87,6 +87,7 @@ public class MotionState_Player : MotionState_BaseFrontier<PlayerMotion>
             case PlayerMotion.Think:
             break;
         }
+        AssignVelocity_Inertia();
     }
 
     private void UpdateIdle()
@@ -109,7 +110,7 @@ public class MotionState_Player : MotionState_BaseFrontier<PlayerMotion>
 
         if (Speed <= 0.0f)
         {
-            Debug.LogError($"sprintSpeedÇ™0à»â∫Ç≈Ç∑");
+            Debug.LogError($"SpeedÇ™0à»â∫Ç≈Ç∑");
         }
         //Debug.Log($"{state} {currentProgress}");
 
@@ -124,9 +125,24 @@ public class MotionState_Player : MotionState_BaseFrontier<PlayerMotion>
 
     private void AssignVelocity_Jump()
     {
-        player.Update_CharaAngle();
-        Vector3 _jumpVelocity = new Vector3(0, Speed, 0);
-        velocity = _jumpVelocity + MoveVelocity;
+        if (currentProgress != AnimationProgress.Out)
+        {
+            player.Update_CharaAngle();
+            Vector3 _jumpVelocity = new Vector3(0, Speed, 0);
+            velocity = _jumpVelocity + MoveVelocity;
+        }
+        else
+        {
+
+            velocity = Vector3.zero;
+        }
+    }
+
+    private void AssignVelocity_Inertia()
+    {
+        //Debug.Log($"{nameof(AssignVelocity_Inertia)} {velocity}");
+        velocity += CurrentAnimationProgress.inertia.GetEvaluate;
+        //Debug.Log($"{nameof(AssignVelocity_Inertia)} {velocity}");
     }
 
     public Vector3 MoveVelocity
@@ -135,16 +151,8 @@ public class MotionState_Player : MotionState_BaseFrontier<PlayerMotion>
         {
             Vector3 _ret = player.GetMoveVelocity_ConvertCamera * player.motionBehaviou.MoveSpeed;
 
-            return _ret;
-        }
-    }
 
-    public float Error
-    {
-        get
-        {
-            Debug.Log($"ÉGÉâÅ[");
-            return -100;
+            return _ret;
         }
     }
 
